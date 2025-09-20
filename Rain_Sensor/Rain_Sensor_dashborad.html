@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rain Sensor Dashboard</title>
+<style>
+body {
+  background: linear-gradient(135deg,#4facfe,#00f2fe);
+  font-family: Arial, sans-serif;
+  color: #fff;
+  text-align: center;
+  padding: 30px;
+}
+h1 { font-size: 2.5em; text-shadow: 2px 2px #333; }
+.card {
+  background: rgba(0,0,0,0.25);
+  border-radius: 15px;
+  padding: 20px;
+  margin: 20px auto;
+  width: 300px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+.status {
+  font-size: 2em;
+  font-weight: bold;
+  margin-top: 10px;
+}
+button {
+  padding: 15px 30px; margin: 10px;
+  font-size: 1.1em; border: none; border-radius: 12px; cursor: pointer;
+}
+.on { background: #4CAF50; color: white; }
+.off { background: #f44336; color: white; }
+.auto { background: #2196F3; color: white; }
+button:hover { transform: scale(1.05); }
+</style>
+</head>
+<body>
+
+<h1>🌧 Rain Sensor Dashboard</h1>
+
+<div class="card">
+  <p>Rain Status</p>
+  <div id="rainValue" class="status">--</div>
+</div>
+
+<div class="card">
+  <p>LED State</p>
+  <div id="ledState" class="status">--</div>
+</div>
+
+<div>
+  <button class="on" onclick="ledControl(1)">Turn LED ON</button>
+  <button class="off" onclick="ledControl(0)">Turn LED OFF</button>
+  <button class="auto" onclick="ledControl(2)">Automatic Mode</button>
+</div>
+
+<script>
+const UID = "YOUR_UID"; // Replace with your Roboninja UID
+const baseURL = "http://iot.roboninja.in/index.php";
+
+// Fetch data every 2 seconds
+async function fetchData() {
+  try {
+    let rainRes = await fetch(`${baseURL}?action=read&UID=${UID}&Rain`);
+    let ledRes  = await fetch(`${baseURL}?action=read&UID=${UID}&D1`);
+    let rainValue = (await rainRes.text()).trim();
+    let ledValue  = (await ledRes.text()).trim();
+
+    document.getElementById("rainValue").textContent = (rainValue=="1") ? "YES" : "NO";
+    document.getElementById("ledState").textContent = (ledValue=="1") ? "ON" : "OFF";
+  } catch(e) {
+    console.log("Error fetching data", e);
+  }
+}
+
+// Control LED manually or automatic
+async function ledControl(state) {
+  try {
+    await fetch(`${baseURL}?action=write&UID=${UID}&D1=${state}`);
+  } catch(e) {
+    console.log("Error controlling LED", e);
+  }
+}
+
+setInterval(fetchData, 2000);
+fetchData(); // initial fetch
+</script>
+
+</body>
+</html>
